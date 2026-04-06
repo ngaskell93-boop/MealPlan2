@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IF Meal Plan — 16:8 Protocol</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1915;
+    --card: #201f1b;
+    --border: #2e2c26;
+    --accent: #c8a96e;
+    --accent2: #7ab87a;
+    --accent3: #6aa8c8;
+    --text: #e8e4dc;
+    --muted: #8a8474;
+    --lunch: #c8a96e;
+    --snack: #7ab87a;
+    --dinner: #6aa8c8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  /* ---- HEADER ---- */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 36px 40px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(200,169,110,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .header-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1.1;
+    letter-spacing: -1px;
+  }
+  .header-sub {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 400;
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+  }
+  .header-badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .badge {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .badge.green { border-color: var(--accent2); color: var(--accent2); }
+
+  /* ---- MACROS STRIP ---- */
+  .macros-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .macro-cell {
+    background: var(--surface);
+    padding: 16px 24px;
+    text-align: center;
+  }
+  .macro-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .macro-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 2px;
+  }
+
+  /* ---- FASTING BAR ---- */
+  .fasting-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 40px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    flex-wrap: wrap;
+  }
+  .fasting-pill {
+    background: rgba(200,169,110,0.12);
+    border: 1px solid rgba(200,169,110,0.3);
+    color: var(--accent);
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+  }
+  .eating-pill {
+    background: rgba(122,184,122,0.12);
+    border: 1px solid rgba(122,184,122,0.3);
+    color: var(--accent2);
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+  }
+
+  /* ---- DAYS NAV ---- */
+  .days-nav {
+    display: flex;
+    gap: 0;
+    padding: 24px 40px 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .days-nav::-webkit-scrollbar { display: none; }
+  .day-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 10px 20px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .day-tab:hover { color: var(--text); }
+  .day-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* ---- DAY PANEL ---- */
+  .day-panel { display: none; padding: 24px 40px 0; }
+  .day-panel.active { display: block; }
+
+  .day-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .day-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--text);
+  }
+  .day-totals {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .day-total-pill {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+  }
+  .day-total-pill span { color: var(--accent); }
+
+  /* ---- MEAL CARDS ---- */
+  .meals-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .meal-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .meal-card:hover { border-color: var(--accent); }
+
+  .meal-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 22px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .meal-time-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 6px;
+    min-width: 64px;
+    text-align: center;
+  }
+  .tag-lunch { background: rgba(200,169,110,0.15); color: var(--lunch); border: 1px solid rgba(200,169,110,0.3); }
+  .tag-snack { background: rgba(122,184,122,0.15); color: var(--snack); border: 1px solid rgba(122,184,122,0.3); }
+  .tag-dinner { background: rgba(106,168,200,0.15); color: var(--dinner); border: 1px solid rgba(106,168,200,0.3); }
+
+  .meal-info { flex: 1; }
+  .meal-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .meal-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .meal-macros {
+    display: flex;
+    gap: 14px;
+    margin-right: 12px;
+  }
+  .mmacro {
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+  }
+  .mmacro-val { font-size: 13px; font-weight: 500; color: var(--accent); }
+  .mmacro-lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  .expand-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: all 0.25s;
+    font-size: 14px;
+  }
+  .meal-card.open .expand-icon {
+    transform: rotate(45deg);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ---- RECIPE BODY ---- */
+  .meal-body {
+    display: none;
+    border-top: 1px solid var(--border);
+    padding: 22px 22px 22px;
+  }
+  .meal-card.open .meal-body { display: block; }
+
+  .recipe-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 620px) {
+    .recipe-sections { grid-template-columns: 1fr; }
+    .meal-macros { display: none; }
+  }
+
+  .recipe-section-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Ingredients */
+  .ingredient-list { list-style: none; }
+  .ingredient-item {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(46,44,38,0.6);
+    font-size: 13px;
+  }
+  .ingredient-item:last-child { border-bottom: none; }
+  .ingredient-qty {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    min-width: 60px;
+    flex-shrink: 0;
+  }
+  .ingredient-name { color: var(--text); }
+
+  /* Steps */
+  .step-list { list-style: none; }
+  .step-item {
+    display: flex;
+    gap: 12px;
+    padding: 8px 0;
+    font-size: 13px;
+    line-height: 1.55;
+    border-bottom: 1px solid rgba(46,44,38,0.6);
+  }
+  .step-item:last-child { border-bottom: none; }
+  .step-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(200,169,110,0.1);
+    border-radius: 4px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step-text { color: var(--text); }
+
+  /* ---- TIPS SECTION ---- */
+  .tips-section {
+    margin: 32px 40px 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .tips-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .tip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .tip-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent2);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .tip-text {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ---- STAPLES SECTION ---- */
+  .staples-section {
+    margin: 20px 40px 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .staples-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .staples-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+  }
+  .staple-group-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .staple-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .staple-tag {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 600px) {
+    header, .days-nav, .day-panel, .tips-section, .staples-section,
+    .tracker-section { padding-left: 20px; padding-right: 20px; }
+    .macros-strip { grid-template-columns: repeat(2,1fr); }
+    .fasting-bar { padding-left: 20px; padding-right: 20px; }
+    .tracker-cols { grid-template-columns: 1fr !important; }
+  }
+
+  /* ---- MEAL COMPLETION CHECKBOX ---- */
+  .check-wrap {
+    display: flex;
+    align-items: center;
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+  .meal-check {
+    appearance: none;
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .meal-check:hover { border-color: var(--accent2); }
+  .meal-check:checked {
+    background: var(--accent2);
+    border-color: var(--accent2);
+  }
+  .meal-check:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-size: 12px;
+    color: var(--bg);
+    font-weight: 700;
+  }
+  .meal-card.completed {
+    border-color: rgba(122,184,122,0.3);
+    opacity: 0.8;
+  }
+  .meal-card.completed .meal-name {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+
+  /* ---- TRACKER SECTION ---- */
+  .tracker-section {
+    margin: 32px 40px 0;
+  }
+  .tracker-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .tracker-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+  }
+  .tracker-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  /* Weight stats */
+  .wt-stats {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .wt-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .wt-stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .wt-stat-lbl {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+  /* Progress bar */
+  .wt-bar-track {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    height: 8px;
+    margin-bottom: 6px;
+    overflow: hidden;
+  }
+  .wt-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 100px;
+    transition: width 0.5s ease;
+    min-width: 2px;
+  }
+  .wt-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 16px;
+  }
+  /* Log form */
+  .wt-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .wt-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .wt-input:focus { border-color: var(--accent); }
+  .wt-input::placeholder { color: var(--muted); }
+  .wt-submit {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    color: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .wt-submit:hover { opacity: 0.85; }
+  /* Week grid */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .week-note {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 4px;
+  }
+  .legend-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .legend-dot {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div>
+      <div class="header-title">Intermittent Fasting<br>Meal Plan</div>
+      <div class="header-sub">16:8 Protocol · No Tuna or Pork · Target: 95 kg by Mid-June</div>
+    </div>
+    <div class="header-badges">
+      <div class="badge">8pm – 12pm Fast</div>
+      <div class="badge green">12pm – 8pm Eat</div>
+    </div>
+  </div>
+</header>
+
+<div class="macros-strip">
+  <div class="macro-cell"><div class="macro-val">~2,050</div><div class="macro-label">Kcal / day</div></div>
+  <div class="macro-cell"><div class="macro-val">~155g</div><div class="macro-label">Protein</div></div>
+  <div class="macro-cell"><div class="macro-val">~190g</div><div class="macro-label">Carbs</div></div>
+  <div class="macro-cell"><div class="macro-val">~65g</div><div class="macro-label">Fat</div></div>
+</div>
+
+<div class="fasting-bar">
+  <span class="fasting-pill">⏱ Fast: 8pm → 12pm (16 hrs)</span>
+  <span>Water · Black coffee · Plain tea only</span>
+  <span class="eating-pill">🍽 Eat: 12pm → 8pm (8 hrs)</span>
+</div>
+
+<!-- DAY TABS -->
+<div class="days-nav">
+  <button class="day-tab active" onclick="switchDay('mon', this)">Monday</button>
+  <button class="day-tab" onclick="switchDay('tue', this)">Tuesday</button>
+  <button class="day-tab" onclick="switchDay('wed', this)">Wednesday</button>
+  <button class="day-tab" onclick="switchDay('thu', this)">Thursday</button>
+  <button class="day-tab" onclick="switchDay('fri', this)">Friday</button>
+  <button class="day-tab" onclick="switchDay('sat', this)">Saturday</button>
+  <button class="day-tab" onclick="switchDay('sun', this)">Sunday</button>
+</div>
+
+<!-- =================== MONDAY =================== -->
+<div class="day-panel active" id="panel-mon">
+  <div class="day-header">
+    <div class="day-name">Monday</div>
+    <div class="day-totals">
+      <div class="day-total-pill"><span>~2,050</span> kcal</div>
+      <div class="day-total-pill">Protein <span>~155g</span></div>
+    </div>
+  </div>
+  <div class="meals-grid">
+
+    <!-- LUNCH MON -->
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-lunch">12:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Grilled Chicken with Brown Rice & Roasted Veg</div>
+          <div class="meal-desc">Chicken breast · Brown rice · Peppers · Courgette · Olive oil</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~750</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~60g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">200g</span><span class="ingredient-name">chicken breast</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">150g</span><span class="ingredient-name">cooked brown rice (≈60g dry)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 each</span><span class="ingredient-name">red & yellow pepper, sliced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 medium</span><span class="ingredient-name">courgette, sliced into half-moons</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 tbsp</span><span class="ingredient-name">olive oil</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">½</span><span class="ingredient-name">lemon, juiced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">to taste</span><span class="ingredient-name">salt, black pepper, garlic powder</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Preheat oven to 200°C (fan). Toss peppers and courgette in half the olive oil, season, and spread on a baking tray. Roast 20–22 minutes until tender and slightly charred.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">While veg roasts, cook brown rice according to packet (or use pre-cooked pouches). Keep warm.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">Season chicken breast with salt, pepper, and garlic powder. Heat remaining olive oil in a non-stick pan on medium-high. Cook chicken 5–6 minutes per side until golden and cooked through (internal 75°C).</div></li>
+              <li class="step-item"><div class="step-num">4</div><div class="step-text">Rest chicken 3 minutes, then slice. Plate rice, top with sliced chicken and roasted veg. Squeeze lemon over everything before serving.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SNACK MON -->
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-snack">4:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Greek Yoghurt, Nuts & Blueberries</div>
+          <div class="meal-desc">Full-fat Greek yoghurt · Mixed nuts · Blueberries</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~350</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~20g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">200g</span><span class="ingredient-name">full-fat Greek yoghurt</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">20g</span><span class="ingredient-name">mixed nuts (almonds, cashews, walnuts)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 handful</span><span class="ingredient-name">fresh blueberries</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Spoon Greek yoghurt into a bowl.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Scatter nuts and blueberries on top. No prep needed — eat immediately or keep covered in the fridge until ready.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DINNER MON -->
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-dinner">7:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Beef & Vegetable Noodle Stir-Fry</div>
+          <div class="meal-desc">Lean beef · Broccoli · Pak choi · Egg noodles · Soy sauce</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~950</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~75g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">150g</span><span class="ingredient-name">lean beef strips (sirloin or rump)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2 nests</span><span class="ingredient-name">egg noodles</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">80g</span><span class="ingredient-name">broccoli florets</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">80g</span><span class="ingredient-name">beansprouts</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 head</span><span class="ingredient-name">pak choi, leaves separated</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2 tbsp</span><span class="ingredient-name">low-sodium soy sauce</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 tsp</span><span class="ingredient-name">sesame oil</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 clove</span><span class="ingredient-name">garlic, minced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 tsp</span><span class="ingredient-name">fresh ginger, grated (optional)</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Cook egg noodles according to packet (usually 3–4 min boiling). Drain and set aside.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Get a wok or large pan very hot. Add a tiny splash of oil and stir-fry beef strips 2–3 minutes until browned. Remove and set aside.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">In the same pan, add garlic and ginger. Stir 30 seconds, then add broccoli and beansprouts. Stir-fry 3 minutes on high heat.</div></li>
+              <li class="step-item"><div class="step-num">4</div><div class="step-text">Add pak choi, noodles, and beef back in. Pour over soy sauce, toss everything together for 1–2 minutes.</div></li>
+              <li class="step-item"><div class="step-num">5</div><div class="step-text">Drizzle sesame oil over the top, toss once more, and serve immediately.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- =================== TUESDAY =================== -->
+<div class="day-panel" id="panel-tue">
+  <div class="day-header">
+    <div class="day-name">Tuesday</div>
+    <div class="day-totals">
+      <div class="day-total-pill"><span>~2,000</span> kcal</div>
+      <div class="day-total-pill">Protein <span>~158g</span></div>
+    </div>
+  </div>
+  <div class="meals-grid">
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-lunch">12:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Baked Salmon with Sweet Potato & Green Beans</div>
+          <div class="meal-desc">Salmon fillet · Sweet potato · Green beans · Butter</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~700</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~55g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">180g</span><span class="ingredient-name">salmon fillet</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 medium</span><span class="ingredient-name">sweet potato (~200g)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">150g</span><span class="ingredient-name">green beans, trimmed</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 tsp</span><span class="ingredient-name">butter</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">to taste</span><span class="ingredient-name">salt, pepper, lemon, fresh dill</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Pierce sweet potato and microwave 8–10 minutes until tender (or bake at 200°C for 45 min).</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Preheat oven to 200°C. Place salmon on a lined tray, season with salt, pepper, and lemon. Bake 12–15 minutes until flesh flakes easily.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">Steam or boil green beans 4–5 minutes. Toss with butter and a pinch of salt.</div></li>
+              <li class="step-item"><div class="step-num">4</div><div class="step-text">Plate together. Split sweet potato open and season. Squeeze extra lemon over salmon and garnish with dill if using.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-snack">4:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Cottage Cheese, Rice Cakes & Salad</div>
+          <div class="meal-desc">Cottage cheese · Rice cakes · Cucumber · Cherry tomatoes</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~280</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~28g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">200g</span><span class="ingredient-name">cottage cheese</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">3</span><span class="ingredient-name">plain rice cakes</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">½</span><span class="ingredient-name">cucumber, sliced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">8–10</span><span class="ingredient-name">cherry tomatoes, halved</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">pinch</span><span class="ingredient-name">black pepper & chives (optional)</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Spoon cottage cheese into a bowl, season with black pepper and a few chives if using.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Serve rice cakes, cucumber and tomatoes alongside. Use rice cakes as scoops for the cottage cheese.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-dinner">7:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Turkey Mince Pasta with Tomato & Herb Sauce</div>
+          <div class="meal-desc">Turkey mince · Wholewheat pasta · Tomato sauce · Parmesan</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~1,020</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~75g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">200g</span><span class="ingredient-name">turkey mince</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">75g dry</span><span class="ingredient-name">wholewheat pasta (penne or fusilli)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 tin</span><span class="ingredient-name">chopped tomatoes (400g)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1</span><span class="ingredient-name">small onion, diced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2 cloves</span><span class="ingredient-name">garlic, minced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 tsp</span><span class="ingredient-name">dried oregano & basil</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">10g</span><span class="ingredient-name">parmesan shavings</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">to taste</span><span class="ingredient-name">salt, pepper, chilli flakes</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Cook pasta according to packet (usually 10–12 min in salted boiling water). Reserve a cup of pasta water before draining.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">While pasta cooks, fry onion in a splash of oil over medium heat for 5 minutes. Add garlic, cook 1 minute.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">Add turkey mince. Break up and fry until cooked through (5–6 min). Season with salt, pepper, chilli flakes, oregano and basil.</div></li>
+              <li class="step-item"><div class="step-num">4</div><div class="step-text">Pour in chopped tomatoes. Simmer 8–10 minutes, adding a splash of pasta water to loosen if needed.</div></li>
+              <li class="step-item"><div class="step-num">5</div><div class="step-text">Toss drained pasta through the sauce. Top with parmesan shavings and serve.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- =================== WEDNESDAY =================== -->
+<div class="day-panel" id="panel-wed">
+  <div class="day-header">
+    <div class="day-name">Wednesday</div>
+    <div class="day-totals">
+      <div class="day-total-pill"><span>~2,100</span> kcal</div>
+      <div class="day-total-pill">Protein <span>~152g</span></div>
+    </div>
+  </div>
+  <div class="meals-grid">
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-lunch">12:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Chicken Caesar Wraps</div>
+          <div class="meal-desc">Grilled chicken · Wholemeal wraps · Romaine · Caesar dressing · Parmesan</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~700</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~55g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">180g</span><span class="ingredient-name">chicken breast</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2</span><span class="ingredient-name">wholemeal wraps</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">4 leaves</span><span class="ingredient-name">romaine lettuce, shredded</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2 tbsp</span><span class="ingredient-name">light Caesar dressing</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">20g</span><span class="ingredient-name">parmesan, shaved</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">to taste</span><span class="ingredient-name">salt, pepper, garlic granules</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Season chicken with salt, pepper, and garlic granules. Grill or pan-fry 5–6 minutes per side until cooked through. Slice into strips.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Warm wraps briefly in a dry pan or microwave (20 seconds) to make them pliable.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">Lay romaine down the centre of each wrap, add chicken strips, drizzle with Caesar dressing, and top with parmesan.</div></li>
+              <li class="step-item"><div class="step-num">4</div><div class="step-text">Fold the sides in and roll up tightly. Slice diagonally and serve.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-snack">4:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Whey Protein Shake with Banana & Milk</div>
+          <div class="meal-desc">Whey protein · Banana · Semi-skimmed milk</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~420</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~40g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">1 scoop</span><span class="ingredient-name">whey protein powder (~25g protein)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">300ml</span><span class="ingredient-name">semi-skimmed milk</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 medium</span><span class="ingredient-name">banana</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Add milk, banana, and whey powder to a blender. Blend 30 seconds until smooth.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Pour over ice if preferred. Drink immediately or shake in a bottle for a simpler option.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-dinner">7:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Lamb Kofta with Bulgur Wheat Tabbouleh & Tzatziki</div>
+          <div class="meal-desc">Lamb kofta · Bulgur wheat · Fresh herbs · Tzatziki · Flatbread</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~980</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~57g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">150g</span><span class="ingredient-name">lean lamb mince</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">80g dry</span><span class="ingredient-name">bulgur wheat</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">handful</span><span class="ingredient-name">fresh parsley & mint, chopped</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2</span><span class="ingredient-name">spring onions, sliced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1</span><span class="ingredient-name">lemon, juiced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">4 tbsp</span><span class="ingredient-name">tzatziki (shop-bought or homemade)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 small</span><span class="ingredient-name">grilled flatbread</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">to taste</span><span class="ingredient-name">cumin, coriander, garlic, salt, pepper</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Mix lamb mince with a pinch of cumin, coriander, garlic, salt and pepper. Shape into 2 oval koftas around skewers (or freeform). Chill 10 minutes if time allows.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Cook bulgur wheat: cover with boiling water (ratio 1:1.5), simmer 12 minutes. Drain and cool slightly.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">Mix cooled bulgur with parsley, mint, spring onion, lemon juice, and a drizzle of olive oil to make tabbouleh. Season well.</div></li>
+              <li class="step-item"><div class="step-num">4</div><div class="step-text">Grill or pan-fry koftas on medium-high heat 4–5 minutes per side until cooked through and slightly charred. Grill flatbread briefly alongside.</div></li>
+              <li class="step-item"><div class="step-num">5</div><div class="step-text">Plate koftas over tabbouleh, add flatbread and a generous dollop of tzatziki.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- =================== THURSDAY =================== -->
+<div class="day-panel" id="panel-thu">
+  <div class="day-header">
+    <div class="day-name">Thursday</div>
+    <div class="day-totals">
+      <div class="day-total-pill"><span>~2,050</span> kcal</div>
+      <div class="day-total-pill">Protein <span>~160g</span></div>
+    </div>
+  </div>
+  <div class="meals-grid">
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-lunch">12:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">King Prawn & Quinoa Power Bowl</div>
+          <div class="meal-desc">King prawns · Quinoa · Avocado · Cherry tomatoes · Rocket · Lemon dressing</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~650</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~50g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">180g</span><span class="ingredient-name">raw king prawns, peeled</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">100g cooked</span><span class="ingredient-name">quinoa (≈50g dry)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">½</span><span class="ingredient-name">avocado, sliced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">8–10</span><span class="ingredient-name">cherry tomatoes, halved</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">handful</span><span class="ingredient-name">rocket leaves</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 tbsp</span><span class="ingredient-name">olive oil</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">½</span><span class="ingredient-name">lemon, juiced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 clove</span><span class="ingredient-name">garlic, minced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">to taste</span><span class="ingredient-name">chilli flakes, salt, pepper</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Cook quinoa in twice its volume of water, bring to boil, then simmer 12–15 minutes until water absorbed. Fluff with a fork and cool.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Heat a pan over high heat. Sauté garlic in a little olive oil for 30 seconds, add prawns. Cook 2–3 minutes until pink and curled. Season with chilli flakes and salt.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">Whisk remaining olive oil with lemon juice to make dressing. Season.</div></li>
+              <li class="step-item"><div class="step-num">4</div><div class="step-text">Build the bowl: quinoa base, rocket, tomatoes, avocado, then prawns on top. Drizzle with dressing and serve.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-snack">4:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Hard-Boiled Eggs with Hummus & Veg Sticks</div>
+          <div class="meal-desc">3 hard-boiled eggs · Carrot & celery · Hummus</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~320</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~25g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">3</span><span class="ingredient-name">large eggs</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2</span><span class="ingredient-name">medium carrots, cut into sticks</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">3 sticks</span><span class="ingredient-name">celery</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2 tbsp</span><span class="ingredient-name">hummus</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">pinch</span><span class="ingredient-name">smoked paprika (optional)</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Place eggs in cold water, bring to boil, then simmer 9–10 minutes for fully hard-boiled. Transfer to cold water immediately to cool. Peel and halve.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Arrange egg halves, veg sticks, and hummus on a plate. Dust eggs with smoked paprika if using.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-dinner">7:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Chicken Tikka Masala with Basmati Rice & Naan</div>
+          <div class="meal-desc">Chicken breast · Tikka masala sauce · Basmati rice · Small naan</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~1,080</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~85g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">200g</span><span class="ingredient-name">chicken breast, cubed</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">½ jar</span><span class="ingredient-name">tikka masala sauce (~200g, or homemade)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">150g cooked</span><span class="ingredient-name">basmati rice (≈60g dry)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 small</span><span class="ingredient-name">naan bread (~70g)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2 tbsp</span><span class="ingredient-name">plain yoghurt (for marinating)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 tsp each</span><span class="ingredient-name">garam masala, cumin, turmeric</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">to garnish</span><span class="ingredient-name">fresh coriander, lemon wedge</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Marinate chicken cubes in yoghurt, garam masala, cumin, and turmeric for at least 20 minutes (overnight is better).</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Cook rice according to packet. Keep warm. Cook naan in a dry pan or oven until warmed through.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">Heat oil in a pan over medium-high. Cook marinated chicken pieces 4–5 minutes until browned and cooked through.</div></li>
+              <li class="step-item"><div class="step-num">4</div><div class="step-text">Pour in tikka masala sauce. Simmer 5–8 minutes, stirring occasionally. Taste and season.</div></li>
+              <li class="step-item"><div class="step-num">5</div><div class="step-text">Serve over rice with naan alongside. Garnish with fresh coriander and lemon.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- =================== FRIDAY =================== -->
+<div class="day-panel" id="panel-fri">
+  <div class="day-header">
+    <div class="day-name">Friday</div>
+    <div class="day-totals">
+      <div class="day-total-pill"><span>~2,000</span> kcal</div>
+      <div class="day-total-pill">Protein <span>~155g</span></div>
+    </div>
+  </div>
+  <div class="meals-grid">
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-lunch">12:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Beef Mince Rice Bowl with Beans & Guacamole</div>
+          <div class="meal-desc">Lean beef mince · Brown rice · Black beans · Guacamole · Salsa</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~750</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~60g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">150g</span><span class="ingredient-name">lean beef mince (5% fat)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">150g cooked</span><span class="ingredient-name">brown rice</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">½ tin</span><span class="ingredient-name">black beans, drained & rinsed</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2 tbsp</span><span class="ingredient-name">guacamole</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2 tbsp</span><span class="ingredient-name">salsa</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2 tbsp</span><span class="ingredient-name">low-fat sour cream</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">handful</span><span class="ingredient-name">mixed leaves</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">to taste</span><span class="ingredient-name">cumin, smoked paprika, salt, pepper</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Brown beef mince in a hot pan, breaking it up as it cooks. Season with cumin, smoked paprika, salt and pepper. Cook 6–8 minutes until fully done.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Add black beans to the pan for the last 2 minutes to warm through.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">Build the bowl: rice as the base, then mince & beans, mixed leaves to the side, then top with guacamole, salsa and sour cream.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-snack">4:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Greek Yoghurt & High-Protein Bar</div>
+          <div class="meal-desc">Greek yoghurt · Protein bar (20g+ protein, &lt;200 kcal)</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~320</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~38g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">150g</span><span class="ingredient-name">Greek yoghurt</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1</span><span class="ingredient-name">high-protein bar (e.g. Grenade, PhD, Fulfil)</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">No prep needed. Serve yoghurt in a bowl and eat alongside the protein bar. Keep it simple — it's a snack, not a meal!</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-dinner">7:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Baked Cod with Roasted Mediterranean Veg & Herby New Potatoes</div>
+          <div class="meal-desc">Cod loin · Aubergine · Courgette · Tomato · New potatoes · Herbs</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~930</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~57g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">200g</span><span class="ingredient-name">cod loin fillet</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">½ small</span><span class="ingredient-name">aubergine, cubed</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1</span><span class="ingredient-name">courgette, sliced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1</span><span class="ingredient-name">large tomato, quartered</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">½</span><span class="ingredient-name">red onion, wedges</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">200g</span><span class="ingredient-name">new potatoes, halved</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 tbsp</span><span class="ingredient-name">olive oil</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">to taste</span><span class="ingredient-name">rosemary, thyme, salt, pepper, lemon</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Preheat oven to 200°C. Boil new potatoes 10 minutes until just tender. Drain, toss with a little olive oil, rosemary, salt and pepper. Roast in oven 20 minutes until golden.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Meanwhile, toss aubergine, courgette, tomato and onion in remaining olive oil. Spread on a separate baking tray, season, and roast 20–25 minutes at 200°C.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">Place cod on a lined baking tray. Season with salt, pepper and a squeeze of lemon. Bake 12–15 minutes until flesh is opaque and flakes easily.</div></li>
+              <li class="step-item"><div class="step-num">4</div><div class="step-text">Plate everything together. Scatter fresh thyme over potatoes and serve with a lemon wedge.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- =================== SATURDAY =================== -->
+<div class="day-panel" id="panel-sat">
+  <div class="day-header">
+    <div class="day-name">Saturday</div>
+    <div class="day-totals">
+      <div class="day-total-pill"><span>~2,150</span> kcal</div>
+      <div class="day-total-pill">Protein <span>~158g</span></div>
+    </div>
+  </div>
+  <div class="meals-grid">
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-lunch">12:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">High-Protein Brunch Plate</div>
+          <div class="meal-desc">Scrambled eggs · Turkey rashers · Grilled tomatoes · Mushrooms · Toast · Avocado</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~700</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~52g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">3</span><span class="ingredient-name">large eggs</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">3</span><span class="ingredient-name">turkey rashers</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2</span><span class="ingredient-name">vine tomatoes, halved</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">100g</span><span class="ingredient-name">chestnut mushrooms</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 slice</span><span class="ingredient-name">wholemeal toast</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">½ small</span><span class="ingredient-name">avocado</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">splash</span><span class="ingredient-name">milk (for eggs)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">to taste</span><span class="ingredient-name">salt, pepper, chilli flakes</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Grill turkey rashers and halved tomatoes under a medium grill for 6–8 minutes, turning rashers halfway.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Sauté mushrooms in a dry non-stick pan over medium-high heat until golden. Season.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">Whisk eggs with a splash of milk, salt and pepper. Cook low and slow in a buttered pan, stirring gently — remove from heat just before fully set (residual heat finishes them).</div></li>
+              <li class="step-item"><div class="step-num">4</div><div class="step-text">Toast wholemeal bread. Slice avocado, season with salt and chilli flakes.</div></li>
+              <li class="step-item"><div class="step-num">5</div><div class="step-text">Plate everything together and serve immediately.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-snack">4:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">PB Banana Protein Shake</div>
+          <div class="meal-desc">Whey protein · Almond milk · Banana · Spinach · Peanut butter</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~430</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~38g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">1 scoop</span><span class="ingredient-name">whey protein (vanilla or unflavoured)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">200ml</span><span class="ingredient-name">unsweetened almond milk</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1</span><span class="ingredient-name">banana (frozen is best)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 handful</span><span class="ingredient-name">baby spinach</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 tbsp</span><span class="ingredient-name">natural peanut butter</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">handful</span><span class="ingredient-name">ice cubes</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Add all ingredients to a blender. Start with liquid, then solids on top.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Blend 40–60 seconds until completely smooth. The spinach will be undetectable in flavour — it just adds colour and micronutrients.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">Pour and drink immediately.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-dinner">7:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Chicken Fajita Wraps</div>
+          <div class="meal-desc">Chicken breast · Mixed peppers · Fajita seasoning · Tortillas · Salsa</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~1,020</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~68g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">200g</span><span class="ingredient-name">chicken breast, sliced into strips</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2</span><span class="ingredient-name">mixed peppers (red & yellow), sliced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1</span><span class="ingredient-name">red onion, sliced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 sachet</span><span class="ingredient-name">fajita seasoning (or homemade: cumin, smoked paprika, garlic, oregano)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2</span><span class="ingredient-name">wholemeal tortillas</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">3 tbsp</span><span class="ingredient-name">salsa</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2 tbsp</span><span class="ingredient-name">light sour cream</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 tsp</span><span class="ingredient-name">olive oil</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Toss chicken strips in fajita seasoning. Heat oil in a large pan or griddle over high heat.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Cook chicken 5–6 minutes until cooked through and slightly charred. Remove and rest.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">In the same pan, fry peppers and onion on high heat 4–5 minutes until softened with some char. Season.</div></li>
+              <li class="step-item"><div class="step-num">4</div><div class="step-text">Warm tortillas in a dry pan 20 seconds per side.</div></li>
+              <li class="step-item"><div class="step-num">5</div><div class="step-text">Build fajitas: tortilla, then chicken, peppers & onion, salsa, sour cream. Fold and enjoy.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- =================== SUNDAY =================== -->
+<div class="day-panel" id="panel-sun">
+  <div class="day-header">
+    <div class="day-name">Sunday</div>
+    <div class="day-totals">
+      <div class="day-total-pill"><span>~2,000</span> kcal</div>
+      <div class="day-total-pill">Protein <span>~153g</span></div>
+    </div>
+  </div>
+  <div class="meals-grid">
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-lunch">12:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Sunday Roast Chicken Bowl</div>
+          <div class="meal-desc">Roast chicken breast · Sweet potato wedges · Broccoli · Carrots · Light gravy</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~700</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~58g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">200g</span><span class="ingredient-name">chicken breast</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 medium</span><span class="ingredient-name">sweet potato, cut into wedges</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">100g</span><span class="ingredient-name">broccoli florets</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2</span><span class="ingredient-name">medium carrots, sliced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">100ml</span><span class="ingredient-name">light gravy (granules or reduced-fat)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 tsp</span><span class="ingredient-name">olive oil</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">to taste</span><span class="ingredient-name">rosemary, garlic, salt, pepper</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Preheat oven to 200°C. Toss sweet potato wedges in olive oil, rosemary, garlic, salt. Roast 25–30 minutes until golden.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Season chicken with salt, pepper, and garlic. Roast alongside for the final 20 minutes until internal temp reaches 75°C.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">Steam broccoli and carrots 5–7 minutes until tender but not soft.</div></li>
+              <li class="step-item"><div class="step-num">4</div><div class="step-text">Prepare gravy per packet or from chicken roasting juices — skim off fat if using juices.</div></li>
+              <li class="step-item"><div class="step-num">5</div><div class="step-text">Rest chicken 3 minutes, then slice. Plate everything and pour over gravy.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-snack">4:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Cottage Cheese, Berries, Honey & Almonds</div>
+          <div class="meal-desc">Cottage cheese · Mixed berries · Honey · Almonds</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~320</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~28g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">200g</span><span class="ingredient-name">cottage cheese</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">handful</span><span class="ingredient-name">mixed berries (fresh or frozen-thawed)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1 tsp</span><span class="ingredient-name">honey</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">15g</span><span class="ingredient-name">almonds (whole or flaked)</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Spoon cottage cheese into a bowl.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">Top with berries, drizzle over honey, and scatter almonds on top. Serve immediately.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meal-card" onclick="toggleMeal(this)">
+      <div class="meal-header">
+        <div class="meal-time-tag tag-dinner">7:00pm</div>
+        <div class="meal-info">
+          <div class="meal-name">Beef & Lentil Broth with Crusty Roll</div>
+          <div class="meal-desc">Lean beef · Root veg · Lentils · Bone broth · Wholemeal roll</div>
+        </div>
+        <div class="meal-macros">
+          <div class="mmacro"><div class="mmacro-val">~980</div><div class="mmacro-lbl">kcal</div></div>
+          <div class="mmacro"><div class="mmacro-val">~67g</div><div class="mmacro-lbl">protein</div></div>
+        </div>
+        <div class="expand-icon">+</div>
+      </div>
+      <div class="meal-body">
+        <div class="recipe-sections">
+          <div>
+            <div class="recipe-section-title">Ingredients</div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item"><span class="ingredient-qty">150g</span><span class="ingredient-name">lean beef chunks (braising or stewing)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2</span><span class="ingredient-name">medium carrots, diced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1</span><span class="ingredient-name">parsnip, diced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">2 sticks</span><span class="ingredient-name">celery, diced</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">60g dry</span><span class="ingredient-name">red lentils</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">500ml</span><span class="ingredient-name">bone broth (or good quality beef stock)</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1</span><span class="ingredient-name">crusty wholemeal roll</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">1</span><span class="ingredient-name">bay leaf</span></li>
+              <li class="ingredient-item"><span class="ingredient-qty">to taste</span><span class="ingredient-name">thyme, rosemary, salt, pepper</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="recipe-section-title">Method</div>
+            <ol class="step-list">
+              <li class="step-item"><div class="step-num">1</div><div class="step-text">Pat beef dry and brown all over in a hot pot with a little oil (2–3 min per side). Remove and set aside.</div></li>
+              <li class="step-item"><div class="step-num">2</div><div class="step-text">In the same pot, sauté carrot, parsnip, and celery for 5 minutes. Add a pinch of thyme and rosemary.</div></li>
+              <li class="step-item"><div class="step-num">3</div><div class="step-text">Add beef back in along with lentils, bone broth, and bay leaf. Bring to a simmer.</div></li>
+              <li class="step-item"><div class="step-num">4</div><div class="step-text">Cover and cook on low heat 35–40 minutes until beef is tender and lentils have broken down to thicken the broth. Season well.</div></li>
+              <li class="step-item"><div class="step-num">5</div><div class="step-text">Warm the wholemeal roll. Ladle stew into a bowl and serve with roll for dipping.</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- =================== TRACKERS =================== -->
+<div class="tracker-section">
+  <div class="tracker-cols">
+
+    <!-- WEIGHT TRACKER -->
+    <div class="tracker-card">
+      <div class="tracker-title">⚖️ Weight Tracker</div>
+      <div class="wt-stats">
+        <div class="wt-stat"><div class="wt-stat-val" id="wt-current">102 kg</div><div class="wt-stat-lbl">Current</div></div>
+        <div class="wt-stat"><div class="wt-stat-val" id="wt-lost">-0.0 kg</div><div class="wt-stat-lbl">Lost</div></div>
+        <div class="wt-stat"><div class="wt-stat-val" id="wt-togo">7 kg to go</div><div class="wt-stat-lbl">Remaining</div></div>
+        <div class="wt-stat"><div class="wt-stat-val" id="wt-days">—</div><div class="wt-stat-lbl">Days Left</div></div>
+      </div>
+      <div class="wt-bar-track"><div class="wt-bar-fill" id="wt-bar-fill" style="width:0%"></div></div>
+      <div class="wt-bar-labels">
+        <span>Start: 102 kg</span>
+        <span id="wt-pct">0% to goal</span>
+        <span>Goal: 95 kg</span>
+      </div>
+      <form class="wt-form" id="wt-form">
+        <input class="wt-input" id="wt-input" type="number" step="0.1" min="60" max="200" placeholder="Today's weight (kg)" required>
+        <button class="wt-submit" type="submit">Log</button>
+      </form>
+      <div id="wt-history"></div>
+    </div>
+
+    <!-- WEEK ADHERENCE -->
+    <div class="tracker-card">
+      <div class="tracker-title">📅 This Week</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5;">Tick the ✓ on each meal card when you've eaten it. Progress resets each Monday.</p>
+      <div class="week-grid" id="week-grid"></div>
+      <div class="week-note" id="week-adherence">Loading…</div>
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div> All 3 meals</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> 2 meals</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(200,169,110,0.4)"></div> 1 meal</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--border)"></div> None logged</div>
+      </div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Target</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;flex:1;min-width:100px;">
+            <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--accent2);font-weight:600;">95 kg</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px;">Goal weight</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;flex:1;min-width:100px;">
+            <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--accent);font-weight:600;">Mid-June</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px;">Target date</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;flex:1;min-width:100px;">
+            <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--accent);font-weight:600;">0.5–1kg</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px;">Loss per week</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TIPS -->
+<div class="tips-section">
+  <div class="tips-title">Intermittent Fasting Tips</div>
+  <div class="tips-grid">
+    <div class="tip-card">
+      <div class="tip-title">Breaking the Fast</div>
+      <div class="tip-text">Start with a balanced lunch — protein + complex carbs + veg. Don't binge to compensate for the fast.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">Hunger in the Morning</div>
+      <div class="tip-text">Black coffee, green tea, or sparkling water during the fast are your best tools. Hunger passes after 20–30 min.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">Training on This Plan</div>
+      <div class="tip-text">Ideal to train around 11am (just before your window opens) or 12–1pm so you can refuel straight after.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">Hydration</div>
+      <div class="tip-text">Aim for 2.5–3L of water across the full day. Electrolytes (a pinch of salt in water) help during longer fasts.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">Protein Priority</div>
+      <div class="tip-text">Hit your 150g+ protein target every day. Spread it across all three meals — don't leave it all to dinner.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">Progress Tracking</div>
+      <div class="tip-text">Weigh yourself weekly, same time, same conditions (morning, post-toilet). Expect 0.5–1 kg loss per week on track.</div>
+    </div>
+  </div>
+</div>
+
+<!-- STAPLES -->
+<div class="staples-section">
+  <div class="staples-title">Weekly Staples to Keep In</div>
+  <div class="staples-grid">
+    <div>
+      <div class="staple-group-title">Proteins</div>
+      <div class="staple-tags">
+        <span class="staple-tag">Chicken breast</span>
+        <span class="staple-tag">Turkey mince</span>
+        <span class="staple-tag">Lean beef mince</span>
+        <span class="staple-tag">Salmon fillets</span>
+        <span class="staple-tag">Cod loin</span>
+        <span class="staple-tag">Lamb mince</span>
+        <span class="staple-tag">King prawns</span>
+        <span class="staple-tag">Eggs</span>
+        <span class="staple-tag">Greek yoghurt</span>
+        <span class="staple-tag">Cottage cheese</span>
+      </div>
+    </div>
+    <div>
+      <div class="staple-group-title">Carbs</div>
+      <div class="staple-tags">
+        <span class="staple-tag">Brown rice</span>
+        <span class="staple-tag">Basmati rice</span>
+        <span class="staple-tag">Sweet potatoes</span>
+        <span class="staple-tag">Wholemeal wraps</span>
+        <span class="staple-tag">Wholewheat pasta</span>
+        <span class="staple-tag">Bulgur wheat</span>
+        <span class="staple-tag">Quinoa</span>
+        <span class="staple-tag">New potatoes</span>
+      </div>
+    </div>
+    <div>
+      <div class="staple-group-title">Veg & Fruit</div>
+      <div class="staple-tags">
+        <span class="staple-tag">Broccoli</span>
+        <span class="staple-tag">Mixed peppers</span>
+        <span class="staple-tag">Courgette</span>
+        <span class="staple-tag">Spinach</span>
+        <span class="staple-tag">Cherry tomatoes</span>
+        <span class="staple-tag">Avocado</span>
+        <span class="staple-tag">Blueberries</span>
+        <span class="staple-tag">Bananas</span>
+      </div>
+    </div>
+    <div>
+      <div class="staple-group-title">Fats & Flavour</div>
+      <div class="staple-tags">
+        <span class="staple-tag">Olive oil</span>
+        <span class="staple-tag">Mixed nuts</span>
+        <span class="staple-tag">Almonds</span>
+        <span class="staple-tag">Hummus</span>
+        <span class="staple-tag">Low-sodium soy sauce</span>
+        <span class="staple-tag">Sesame oil</span>
+        <span class="staple-tag">Peanut butter</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── STORAGE HELPERS ──────────────────────────────────────────────
+  const S = {
+    get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+    set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+  };
+
+  // ── DAY SWITCHING ────────────────────────────────────────────────
+  function switchDay(day, btn) {
+    document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('panel-' + day).classList.add('active');
+    btn.classList.add('active');
+    renderDayChecks(day);
+  }
+
+  function toggleMeal(card) {
+    card.classList.toggle('open');
+  }
+
+  // ── AUTO-OPEN TODAY ──────────────────────────────────────────────
+  const dayMap = ['sun','mon','tue','wed','thu','fri','sat'];
+  function openToday() {
+    const key = dayMap[new Date().getDay()];
+    const tab = document.querySelector(`.day-tab[data-day="${key}"]`);
+    if (tab) switchDay(key, tab);
+  }
+
+  // ── MEAL COMPLETION ──────────────────────────────────────────────
+  // Key: "meals-YYYY-WW-daykey" → { lunch: bool, snack: bool, dinner: bool }
+  function weekKey() {
+    const now = new Date();
+    const jan1 = new Date(now.getFullYear(), 0, 1);
+    const week = Math.ceil(((now - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+    return `${now.getFullYear()}-W${String(week).padStart(2,'0')}`;
+  }
+
+  function mealStorageKey(day) { return `meals-${weekKey()}-${day}`; }
+
+  function getMealState(day) {
+    return S.get(mealStorageKey(day)) || { lunch: false, snack: false, dinner: false };
+  }
+
+  function setMealState(day, meal, val) {
+    const state = getMealState(day);
+    state[meal] = val;
+    S.set(mealStorageKey(day), state);
+    renderDayChecks(day);
+    renderWeekProgress();
+  }
+
+  function renderDayChecks(day) {
+    const state = getMealState(day);
+    const panel = document.getElementById('panel-' + day);
+    if (!panel) return;
+    panel.querySelectorAll('.meal-check').forEach(cb => {
+      const meal = cb.dataset.meal;
+      cb.checked = state[meal] || false;
+      cb.closest('.meal-card').classList.toggle('completed', cb.checked);
+    });
+    // Update day tab badge
+    const done = Object.values(state).filter(Boolean).length;
+    const tab = document.querySelector(`.day-tab[data-day="${day}"]`);
+    if (tab) {
+      const old = tab.querySelector('.tab-badge');
+      if (old) old.remove();
+      if (done > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'tab-badge';
+        badge.textContent = done === 3 ? '✓' : `${done}/3`;
+        badge.style.cssText = `margin-left:6px;font-size:10px;padding:1px 5px;border-radius:4px;background:${done===3?'rgba(122,184,122,0.2)':'rgba(200,169,110,0.15)'};color:${done===3?'var(--accent2)':'var(--accent)'}`;
+        tab.appendChild(badge);
+      }
+    }
+  }
+
+  // ── WEIGHT TRACKER ───────────────────────────────────────────────
+  const START_WEIGHT = 102;
+  const GOAL_WEIGHT  = 95;
+  const GOAL_DATE    = new Date('2026-06-14');
+
+  function getWeights() { return S.get('weights') || []; }
+
+  function addWeight(kg) {
+    const weights = getWeights();
+    const today = new Date().toISOString().split('T')[0];
+    const existing = weights.findIndex(w => w.date === today);
+    if (existing >= 0) weights[existing].kg = kg;
+    else weights.push({ date: today, kg });
+    weights.sort((a,b) => a.date.localeCompare(b.date));
+    S.set('weights', weights);
+    renderWeightUI();
+    renderWeekProgress();
+  }
+
+  function deleteWeight(date) {
+    const weights = getWeights().filter(w => w.date !== date);
+    S.set('weights', weights);
+    renderWeightUI();
+    renderWeekProgress();
+  }
+
+  function renderWeightUI() {
+    const weights = getWeights();
+    const latest  = weights.length ? weights[weights.length - 1].kg : START_WEIGHT;
+    const lost    = (START_WEIGHT - latest).toFixed(1);
+    const toGo    = (latest - GOAL_WEIGHT).toFixed(1);
+    const pct     = Math.min(100, Math.max(0, ((START_WEIGHT - latest) / (START_WEIGHT - GOAL_WEIGHT)) * 100));
+
+    // Days to goal
+    const daysLeft = Math.max(0, Math.ceil((GOAL_DATE - new Date()) / 86400000));
+
+    document.getElementById('wt-current').textContent = latest + ' kg';
+    document.getElementById('wt-lost').textContent    = '-' + lost + ' kg';
+    document.getElementById('wt-togo').textContent    = toGo + ' kg to go';
+    document.getElementById('wt-days').textContent    = daysLeft + ' days left';
+    document.getElementById('wt-bar-fill').style.width = pct.toFixed(1) + '%';
+    document.getElementById('wt-pct').textContent    = pct.toFixed(0) + '% to goal';
+
+    // History list
+    const hist = document.getElementById('wt-history');
+    hist.innerHTML = '';
+    const recent = [...weights].reverse().slice(0, 8);
+    if (recent.length === 0) {
+      hist.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px 0;">No entries yet — log your first weigh-in above.</div>';
+      return;
+    }
+    recent.forEach((w, i) => {
+      const prev = i < recent.length - 1 ? recent[i+1].kg : (i === recent.length - 1 ? START_WEIGHT : w.kg);
+      const delta = w.kg - prev;
+      const deltaStr = delta === 0 ? '—' : (delta > 0 ? '+' : '') + delta.toFixed(1) + ' kg';
+      const col = delta < 0 ? 'var(--accent2)' : delta > 0 ? '#c86e6e' : 'var(--muted)';
+      const d = new Date(w.date + 'T12:00:00');
+      const label = d.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+      hist.innerHTML += `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:12px;color:var(--muted);min-width:70px;">${label}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:14px;color:var(--text);font-weight:500;">${w.kg} kg</span>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:${col};min-width:60px;text-align:right;">${deltaStr}</span>
+          <button onclick="deleteWeight('${w.date}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 4px;line-height:1;" title="Delete">×</button>
+        </div>`;
+    });
+  }
+
+  // ── WEEK PROGRESS ────────────────────────────────────────────────
+  function renderWeekProgress() {
+    const days = ['mon','tue','wed','thu','fri','sat','sun'];
+    const labels = ['M','T','W','T','F','S','S'];
+    const grid = document.getElementById('week-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    let totalDone = 0, totalPossible = 0;
+    days.forEach((day, i) => {
+      const state = getMealState(day);
+      const done  = Object.values(state).filter(Boolean).length;
+      totalDone += done; totalPossible += 3;
+      const pct = done / 3;
+      const col = pct === 1 ? 'var(--accent2)' : pct >= 0.5 ? 'var(--accent)' : pct > 0 ? 'rgba(200,169,110,0.4)' : 'var(--border)';
+      grid.innerHTML += `
+        <div style="text-align:center;">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:6px;font-family:'DM Mono',monospace;">${labels[i]}</div>
+          <div style="width:32px;height:32px;border-radius:8px;background:${col};margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:11px;color:${pct>0?'var(--bg)':'var(--muted)'};font-weight:600;">${done>0?done:''}</div>
+        </div>`;
+    });
+    const adherePct = totalPossible ? Math.round((totalDone / totalPossible) * 100) : 0;
+    const el = document.getElementById('week-adherence');
+    if (el) el.textContent = `${adherePct}% this week (${totalDone}/${totalPossible} meals)`;
+  }
+
+  // ── INIT ─────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    // Add data-day to tabs
+    document.querySelectorAll('.day-tab').forEach(tab => {
+      const day = tab.getAttribute('onclick').match(/'(\w+)'/)[1];
+      tab.dataset.day = day;
+    });
+
+    // Inject check buttons into each meal card
+    const mealTypes = ['lunch','snack','dinner'];
+    document.querySelectorAll('.day-panel').forEach(panel => {
+      const day = panel.id.replace('panel-','');
+      panel.querySelectorAll('.meal-card').forEach((card, idx) => {
+        const meal = mealTypes[idx] || 'lunch';
+        const hdr = card.querySelector('.meal-header');
+        // Stop expand-toggle when clicking the checkbox area
+        const checkWrap = document.createElement('div');
+        checkWrap.className = 'check-wrap';
+        checkWrap.innerHTML = `<input type="checkbox" class="meal-check" data-meal="${meal}" data-day="${day}" title="Mark as eaten">`;
+        checkWrap.addEventListener('click', e => e.stopPropagation());
+        checkWrap.querySelector('input').addEventListener('change', e => {
+          setMealState(day, meal, e.target.checked);
+        });
+        hdr.insertBefore(checkWrap, hdr.firstChild);
+      });
+    });
+
+    // Render all days' check states & badges
+    dayMap.forEach(d => renderDayChecks(d));
+    renderWeekProgress();
+    renderWeightUI();
+    openToday();
+
+    // Weight form
+    document.getElementById('wt-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const val = parseFloat(document.getElementById('wt-input').value);
+      if (!isNaN(val) && val > 50 && val < 200) {
+        addWeight(Math.round(val * 10) / 10);
+        document.getElementById('wt-input').value = '';
+      }
+    });
+  });
+</script>
+</body>
+</html>
